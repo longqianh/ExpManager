@@ -9,5 +9,7 @@ ma.import_toolbox('QPSL');
 
 %% exp data saving
 test_data=rand(10);
-data_name='test';
-save(fullfile(ma.exp_save_dir,data_name),"test_data");
+data_save_name='test';
+save(fullfile(ma.exp_save_dir,data_save_name),"test_data");
+%% make subdirs in exp save dir
+ma.mkexpdir('exp_sub');

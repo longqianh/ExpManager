@@ -87,24 +87,25 @@ methods
         ExpManager.mkdirs(filePath);
     end
 
-%     function save_data(obj,data_name,save_name)
-%         if nargin<3
-%             save_name=data_name;
-%         end
-%         savePath=fullfile(obj.exp_save_dir,save_name);
-%         save savePath data_name;
-%         fprintf("save data %s at %s\n",data_name,savePath);    
-%     end
+    function save_data(obj,data_name,save_name)
+        if nargin<3
+            save_name=data_name;
+        end
+        savePath=fullfile(obj.exp_save_dir,save_name);
+        save(savePath,data_name);
+        fprintf("save data %s at %s\n",data_name,savePath);    
+    end
 
 
-%     function load_data(obj,data_name,load_name)
-%         if nargin<3
-%             load_name=data_name;
-%         end
-%         load(fullfile(obj.exp_save_dir,load_name),data_name);
-%         fprintf("load data %s from %s\n",data_name,loadPath);
-%     
-%     end
+    function load_data(obj,data_name,save_name)
+        if nargin<3
+            save_name=data_name;
+        end
+        load(fullfile(obj.exp_save_dir,save_name),data_name);
+        fprintf("load data %s from %s\n",data_name,loadPath);
+    
+    end
+   % todo: exp save wrapper
    
 end
 end

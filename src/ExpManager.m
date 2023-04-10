@@ -2,6 +2,7 @@ classdef ExpManager < handle
 properties
     exp_date 
     exp_name
+    exp_dir
     exp_main_dir
     exp_save_dir
     exp_data_dir
@@ -65,6 +66,7 @@ methods
             obj.exp_date=exp_date;
         end
         obj.exp_main_dir=pwd;
+        obj.exp_dir=fullfile(sup_proj_dir,'Experiments');
         obj.exp_save_dir=fullfile(sup_proj_dir,'Experiments',obj.exp_date,obj.exp_name);
         ExpManager.mkdirs(obj.exp_save_dir);
         obj.exp_data_dir=fullfile(cur_proj_dir,'data');

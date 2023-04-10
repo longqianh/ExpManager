@@ -10,7 +10,7 @@ properties
 end
 
 methods(Static)
-    function mkdirs(filePath)
+    function filePath=mkdirs(filePath)
     % Make directory if the file path does not exist
     % Longqian Huang, 2022.3.2
     

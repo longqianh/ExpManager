@@ -16,7 +16,7 @@ methods(Static)
         if ~exist(filePath,'dir')
             [supPath,~] = fileparts(filePath);
             if ~exist(supPath,'dir')
-                mkdirs(supPath);
+                mkdir(supPath);
                 fprintf("make sup dirs: %s\n", supPath);
             end
             mkdir(filePath);

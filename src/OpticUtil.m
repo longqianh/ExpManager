@@ -1,14 +1,30 @@
 classdef OpticUtil
     methods(Static)
-        function I=Gaussian(height,width,mu,sigma)
-            y=linspace(-1,1,height);
-            x=linspace(-1,1,width);
+        function I=Gaussian(D,mu,sigma)
+            % D: beamWidth (in pixel)
+            y=linspace(-1,1,D);
+            x=linspace(-1,1,D);
             [xx,yy]=meshgrid(x,y);
             I = 1/(2*pi*sigma)*exp(-((xx-mu).^2+(yy-mu).^2)/(2*sigma^2));
             I_max=max(max(I));
             I_min=min(min(I));
-            I = (I-I_min)/(I_max-I_min);
+            I = (xx.^2+yy.^2<=1).*(I-I_min)/(I_max-I_min);
         end
+
+        function I_pad=fourierPad(I,pad_factor)
+            src_sz=size(I);
+            pad_sz=2.^nextpow2(src_sz*pad_factor);
+            I_pad=zeros(pad_sz);
+            I_pad(floor(pad_sz(1)/2-src_sz(1)/2)+1:floor(pad_sz(1)/2+src_sz(1)/2),...
+                floor(pad_sz(2)/2-src_sz(2)/2)+1:floor(pad_sz(2)/2+src_sz(2)/2))=I;
+        end
+
+        function I=retreivePad(I_pad,src_sz)
+            pad_sz=size(I_pad);
+            I=I_pad(floor(pad_sz(1)/2-src_sz(1)/2)+1:floor(pad_sz(1)/2+src_sz(1)/2),...
+                floor(pad_sz(2)/2-src_sz(2)/2)+1:floor(pad_sz(2)/2+src_sz(2)/2));
+        end
+
 
         function [Uout,xout,yout] = prop_Angular_Spectrum(Uin,lambda,z,dx)
             % 角谱传输仿真函数
@@ -104,6 +120,38 @@ classdef OpticUtil
             if verbose
                 figure,imshow(phase,[]);title('phase extracted');
             end
+          end       
+
+
+        function img_expand=expand_img(img,factor)
+            factor=round(factor);
+            img_expand=zeros(factor*size(img));
+            for i=0:factor-1
+                for j=0:factor-1
+                    img_expand(1+i:factor:size(img_expand,1)+i,1+j:factor:size(img_expand,2)+j)=img;
+                end
+            end
+        end
+
+        function img_pad=pad_img(img,pad_sz)
+            img_pad=zeros(pad_sz);
+            img_pad(pad_sz(1)/2-size(img,1)/2+1:pad_sz(1)/2+size(img,1)/2,...
+                    pad_sz(2)/2-size(img,2)/2+1:pad_sz(2)/2+size(img,2)/2)=img;
+        end
+        
+       function amp_image=lee_hologram(phase_in,alpha)
+            
+            dim_in = size(phase_in);
+            amp_image = zeros(dim_in);
+            y=1:dim_in(1);
+            x=1:dim_in(2);
+            [X,Y]=meshgrid(x,y);
+            x_y=X-Y;
+
+%              alpha =0.85;%carrier frequency must be big enough to separate -1st order from 0th order
+             amp_holo = 0.5*(1+cos(2*pi*(x_y)*alpha-phase_in)); % amplitude hologram
+             amp_image(amp_holo>0.5)=1;% binary amplitude hologram
+              
         end
     end
 end

@@ -23,7 +23,7 @@ methods(Static)
             mkdir(filePath);
             fprintf("make dir: %s\n", filePath);
         else
-            fprintf("path already exists.");
+            fprintf("path already exists.\n");
         end
     end
 
@@ -89,6 +89,7 @@ methods
         ExpManager.mkdirs(filePath);
     end
 
+    
 %     function save_data(obj,data_name,save_name)
 %         if nargin<3
 %             save_name=data_name;

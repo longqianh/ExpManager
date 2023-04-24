@@ -84,9 +84,9 @@ methods
         ExpManager.import_toolboxes(obj.toolbox_dir,string(toolbox));
     end
     
-    function mkexpdir(obj,exp_name)
-        filePath=fullfile(obj.exp_save_dir,exp_name);
-        ExpManager.mkdirs(filePath);
+    function expdir=mkexpdir(obj,exp_name)
+        expdir=fullfile(obj.exp_save_dir,exp_name);
+        ExpManager.mkdirs(expdir);
     end
 
     

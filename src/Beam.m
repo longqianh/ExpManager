@@ -8,10 +8,10 @@ properties
     dx % watching camera
     X % camera coordinate x
     Y % camera coordinate y
-    fourier_pad
+    pad_factor
     profile_type
     profile_sigma    
-
+    aperture
 end
 properties (Access = private)
     canvas
@@ -39,7 +39,7 @@ methods
             options.cam_res = 8e-6;
             options.profile = "gaussian"
             options.profile_sigma = 0.8
-            options.fourier_pad = 4
+            options.pad_factor = 5
         end
         obj.dx = options.cam_res;
         obj.D = beamWidth;
@@ -52,7 +52,8 @@ methods
         obj.profile_type=options.profile;
         obj.A = obj.profile(options.profile,options.profile_sigma);
         obj.Phi = zeros(obj.N);
-        obj.fourier_pad = options.fourier_pad;
+        obj.pad_factor = options.pad_factor;
+%         obj.aperture=obj.Aperture(obj.D/2);
         obj.canvas=figure('Color','White','Name',"Propagation Figures","Visible","off");
         obj.canvas_t=tiledlayout(obj.canvas,'flow','TileSpacing','none','Padding','none');
     end
@@ -78,14 +79,19 @@ methods
         % Essential: use kx that is extended in XYpad 
         % [Use more spatial frequency in calculation]
         % i.e., consider more angles in angular spectrum decomposition
-
+        
         dfx = 1/(obj.dx*obj.M); % real spatial frequency interval
-        fx = (-obj.M/2+1:obj.M/2)*dfx; % use more spatial frequency in cal
+        cx=floor(obj.M/2);
+        if mod(obj.N,2)
+            fx = (-cx:cx)*dfx; % use more spatial frequency in cal
+        else
+            fx = (-cx+1:cx)*dfx;
+        end
         fy=fx;
         [FX,FY] = meshgrid(fx, fy);
         KX=2*pi*FX; KY=2*pi*FY;
         % Define transfer function
-        Kz=sqrt(obj.k^2-KX.^2 -KY.^2);
+        Kz=sqrt(obj.k^2-KX.^2-KY.^2);
     end
 
     function x=get.x(obj)
@@ -98,20 +104,29 @@ methods
     end
 
     function M=get.M(obj)
-        M=2^nextpow2(obj.fourier_pad*obj.N);
+%         M=2^nextpow2(obj.pad_factor*obj.N); % fourier pad
+        M=obj.N*obj.pad_factor;
+        if mod(obj.N,2)
+            if mod(M,2)
+                M=M+1;
+            end
+        end
     end
 
     function dx_=get.dx_(obj)
         dx_=obj.D/obj.M;
     end
 
-    function set.fourier_pad(obj,val)
-        obj.fourier_pad=val;
+    function set.pad_factor(obj,val)
+        obj.pad_factor=val;
     end
 
     function reset(obj)
         obj.A = obj.profile(obj.profile_type,obj.profile_sigma);
         obj.Phi = zeros(obj.N);
+%         obj.aperture=obj.Aperture(obj.D/2);
+        obj.canvas=figure('Color','White','Name',"Propagation Figures","Visible","off");
+        obj.canvas_t=tiledlayout(obj.canvas,'flow','TileSpacing','none','Padding','none');
     end
 
     % Characterization
@@ -132,20 +147,16 @@ methods
         a=sqrt(obj.X.^2+obj.Y.^2)<=r;
         obj.A=obj.A.*a;
         obj.Phi=obj.Phi.*a;
-    end
-    % Propogation
 
-    function E_out=interact(obj,t)
-        E_out=obj.E.*t;
-        obj.A = abs(E_out);
-        obj.Phi = angle(E_out);
     end
+
+    % Propogation
 
     function [E_out,E_in]=prop(obj,z,E_mod)
         if nargin<3
-            U_pad=OpticUtil.fourierPad(obj.E,obj.fourier_pad);
+            U_pad=OpticUtil.centerPad(obj.E,obj.pad_factor);
         else
-            U_pad=OpticUtil.fourierPad(obj.E.*E_mod,obj.fourier_pad);
+            U_pad=OpticUtil.centerPad(obj.E.*E_mod,obj.pad_factor);
         end
         % prop in free space
         
@@ -156,18 +167,35 @@ methods
         E_out = OpticUtil.retreivePad(E_out,obj.sz);
         obj.A = abs(E_out);
         obj.Phi = angle(E_out);
-        E_out = OpticUtil.retreivePad(E_out,obj.sz);
         if nargout>1
             E_in = obj.E;
         end
     end
 
+
+    % Beam Interaction
+    function E_out=interact(obj,t)
+        E_out=obj.E.*t;
+        obj.A = abs(E_out);
+        obj.Phi = angle(E_out);
+    end
+
+    function E_out=interfere(obj,t)
+        E_out=obj.E+t;
+        obj.A = abs(E_out);
+        obj.Phi = angle(E_out);
+    end
+    
+    
+    
+    
     % Common amplitude profile
     function t=spfilter(obj,r,pos)
     % spatial filter
     % pos: position in real space [xf,yf]
         t=(obj.X-pos(1)).^2+(obj.Y-pos(2)).^2<=r^2;
     end
+
 
     % Common phase profile
     function t=lens(obj,f)
@@ -200,6 +228,7 @@ methods
         end
 %         figure;imshow(microlens_phase,[]);colorbar;
         t=exp(1j*microlens_phase);
+%         t=t.*obj.aperture;
     end
 
     function t=grating(obj, T, dx, A, Tx, Ty)
@@ -220,6 +249,7 @@ methods
         grating_phase_y = 2*pi*mod(Ty*obj.Y,T)/T;
         grating_phase = A*mod(grating_phase_x+grating_phase_y,2*pi);
         t=exp(1j*grating_phase);
+%         t=t.*obj.aperture;
     end
 
     function t=dmd(obj,dmd_img,p,alpha,NL_)
@@ -244,6 +274,7 @@ methods
             end
         end
         t=exp(1j*dmd_phase).*dmd_img_pad;
+%         t=t.*obj.aperture;
     end
 
     % Visualization

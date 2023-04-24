@@ -8,7 +8,8 @@ classdef OpticUtil
             I = 1/(2*pi*sigma)*exp(-((xx-mu).^2+(yy-mu).^2)/(2*sigma^2));
             I_max=max(max(I));
             I_min=min(min(I));
-            I = (xx.^2+yy.^2<=1).*(I-I_min)/(I_max-I_min);
+            I = (I-I_min)/(I_max-I_min);
+%             I = I.*(xx.^2+yy.^2<=1);
         end
 
         function I_pad=fourierPad(I,pad_factor)
@@ -18,6 +19,32 @@ classdef OpticUtil
             I_pad(floor(pad_sz(1)/2-src_sz(1)/2)+1:floor(pad_sz(1)/2+src_sz(1)/2),...
                 floor(pad_sz(2)/2-src_sz(2)/2)+1:floor(pad_sz(2)/2+src_sz(2)/2))=I;
         end
+
+        function I_pad=centerPad(I,pad_factor)
+            
+            function [padrange,padsz]=get_padrange(d,pad_n)
+                l=floor(d/2);
+                padsz=d*pad_n;
+                if mod(d,2)
+                    if ~mod(padsz,2)
+                        padsz=padsz+1;
+                    end
+                    c=floor(padsz/2)+1;
+                    padrange=c-l:c+l;
+                else
+                    c=floor(padsz/2);
+                    padrange=c-l+1:c+l;
+                end
+
+            end
+
+            src_sz=size(I);
+            [yrange,y_pad]=get_padrange(src_sz(1),pad_factor);
+            [xrange,x_pad]=get_padrange(src_sz(2),pad_factor);
+            I_pad=zeros(y_pad,x_pad);
+            I_pad(yrange,xrange)=I;
+        end
+        
 
         function I=retreivePad(I_pad,src_sz)
             pad_sz=size(I_pad);

@@ -6,7 +6,7 @@ beamWidth=8e-3;
 b=Beam(wavelength,beamWidth,'cam_res',cam_res,...
     'profile','gaussian','profile_sigma',1);
 
-b.visProfile("Initial Profile",1);
+b.visProfile("Initial Profile",'on_canvas',1);
 % dcmos=2*f*wavelength/dxl;
 
 %% [comparison]

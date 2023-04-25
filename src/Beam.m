@@ -96,7 +96,11 @@ methods
 
     function x=get.x(obj)
 %         x=linspace(-obj.D/2+obj.dx,obj.D/2,obj.N);
-        x=obj.dx*(-obj.N/2+1:obj.N/2);
+        if mod(obj.N,2)
+            x=obj.dx*(-floor(obj.N/2):floor(obj.N/2));
+        else
+            x=obj.dx*(-obj.N/2+1:obj.N/2);
+        end
     end
 
     function y=get.y(obj)
@@ -196,6 +200,9 @@ methods
         t=(obj.X-pos(1)).^2+(obj.Y-pos(2)).^2<=r^2;
     end
 
+    function t=planewave(obj,ux,uy)
+        t=exp(1j*obj.k*(ux*obj.X+uy*obj.Y));
+    end
 
     % Common phase profile
     function t=lens(obj,f)
@@ -229,6 +236,14 @@ methods
 %         figure;imshow(microlens_phase,[]);colorbar;
         t=exp(1j*microlens_phase);
 %         t=t.*obj.aperture;
+    end
+
+    function t=vortex(obj, m)
+        
+        % Calculate azimuthal angle
+        theta = atan2(obj.Y, obj.X);
+        t = exp(1i*m*theta);
+
     end
 
     function t=grating(obj, T, dx, A, Tx, Ty)
@@ -278,13 +293,14 @@ methods
     end
 
     % Visualization
-    function visProfile(obj,figname,on_canvas)
+    function visProfile(obj,figname,options)
         arguments
             obj
             figname = 'Beam Profile';
-            on_canvas = 0;
+            options.on_canvas = 0;
+            options.cmap = addcolorplus(312);
         end
-        if on_canvas
+        if options.on_canvas
             nexttile(obj.canvas_t,[1,2]);
             obj.canvas.Visible=1;
             montage({obj.A/max(obj.A,[],'all'),obj.Phi/(2*pi)}, 'Size', [1 2],'DisplayRange', []);
@@ -294,13 +310,16 @@ methods
         else 
             figure('Color','White','Name',figname);
             subplot(121);
-            image(obj.x,obj.y,obj.A,'CDataMapping','scaled');title('Amplitude');
-            colormap(addcolorplus(312));colorbar;
+            imagesc(obj.x, obj.y, obj.A);title('Amplitude');
+            axis equal tight off;
+            colormap(options.cmap);colorbar;
+            
+            
             axis square
             subplot(122);
-            image(obj.x,obj.y,obj.Phi,'CDataMapping','scaled');title('Phase');
-            colormap(addcolorplus(312));colorbar;
-            axis square
+            imagesc(obj.x, obj.y, obj.Phi);title('Phase');
+            axis equal tight off;
+            colormap(options.cmap);colorbar;
         end
         
     end

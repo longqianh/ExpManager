@@ -3,8 +3,9 @@ classdef Beam < handle
 properties
     lambda % wavelength
     D % beam width
-    A % amplitude
-    Phi % phase
+    E % complex electric field
+%     A % amplitude
+%     Phi % phase
     dx % watching camera
     X % camera coordinate x
     Y % camera coordinate y
@@ -22,7 +23,9 @@ properties(Dependent)
     N % resolution in the camera
     sz
     M % padded N for Fourier computation
-    E
+%     E
+    A
+    Phi
     x
     y
     k
@@ -50,8 +53,9 @@ methods
 %         obj.Pupil=(obj.X.^2+obj.Y.^2)<=(options.aperture/2)^2;
         obj.profile_sigma=options.profile_sigma;
         obj.profile_type=options.profile;
-        obj.A = obj.profile(options.profile,options.profile_sigma);
-        obj.Phi = zeros(obj.N);
+%         obj.A = obj.profile(options.profile,options.profile_sigma);
+%         obj.Phi = zeros(obj.N);
+        obj.E = obj.profile(options.profile,options.profile_sigma);
         obj.pad_factor = options.pad_factor;
         obj.aperture=obj.Aperture(obj.D/2);
         obj.canvas=figure('Color','White','Name',"Propagation Figures","Visible","off");
@@ -62,9 +66,16 @@ methods
         N=round(obj.D/obj.dx);
     end
 
-    function E=get.E(obj)
-        E=obj.A.*exp(1i*obj.Phi);
+%     function E=get.E(obj)
+%         E=obj.A.*exp(1i*obj.Phi);
+% 
+%     end
+    function A=get.A(obj)
+        A=abs(obj.E);
+    end
 
+    function Phi=get.Phi(obj)
+        Phi=mod(angle(obj.E),2*pi);
     end
 
     function k=get.k(obj)
@@ -126,8 +137,8 @@ methods
     end
 
     function reset(obj)
-        obj.A = obj.profile(obj.profile_type,obj.profile_sigma);
-        obj.Phi = zeros(obj.N);
+        obj.E = obj.profile(obj.profile_type,obj.profile_sigma);
+%         obj.Phi = zeros(obj.N);
 %         obj.aperture=obj.Aperture(obj.D/2);
         obj.canvas=figure('Color','White','Name',"Propagation Figures","Visible","off");
         obj.canvas_t=tiledlayout(obj.canvas,'flow','TileSpacing','none','Padding','none');
@@ -149,8 +160,7 @@ methods
     
     function a=Aperture(obj,r)
         a=sqrt(obj.X.^2+obj.Y.^2)<=r;
-        obj.A=obj.A.*a;
-        obj.Phi=obj.Phi.*a;
+        obj.E=obj.E.*a;
 
     end
 
@@ -169,13 +179,11 @@ methods
         E_out = ifft2(ifftshift(U_prop));
         clear U_pad U_spec U_prop;
 %         E_out = OpticUtil.retrievePad(E_out,obj.sz);
-        
-        obj.A = abs(E_out);
-        obj.Phi = angle(E_out);
+        obj.E=E_out;
       
     end
 
-    function E_out=prop_seq(obj,t_seq,z_seq,options)
+    function E_out=prop_seq(obj,t_seq,z_seq)
         % z_seq: prop distance sequence
         % t_seq: complex amplitude sequence
         % seq: Ein->t1->z1->tn->zn->Eout
@@ -183,12 +191,13 @@ methods
             obj
             t_seq
             z_seq
-            options.inputpad = 1
+%             options.inputpad = 1
         end
-        if options.inputpad
-            E_in=OpticUtil.centerPad(obj.E,obj.pad_factor);
-        else
+        
+        if size(obj.E,1)==obj.N*obj.pad_factor
             E_in=obj.E;
+        else
+            E_in=OpticUtil.centerPad(obj.E,obj.pad_factor);
         end
 
         for i=1:length(t_seq)
@@ -210,8 +219,7 @@ methods
         end
 %         E_out = OpticUtil.retrievePad(E_out,obj.sz);
         clear U_spec U_prop;
-        obj.A = abs(E_out);
-        obj.Phi = angle(E_out);
+        obj.E=E_out;
      
     end
     % Beam Interaction
@@ -221,8 +229,7 @@ methods
            t
         end
         E_out=obj.E.*t;
-        obj.A = abs(E_out);
-        obj.Phi = mod(angle(E_out),2*pi);
+        obj.E=E_out;
 %         if options.objtype=="spfilter"
 %             [h,w]=size(obj.A);
 %             hc=options.pos(2);
@@ -240,8 +247,7 @@ methods
 
     function E_out=interfere(obj,t)
         E_out=obj.E+t;
-        obj.A = abs(E_out);
-        obj.Phi = angle(E_out);
+        obj.E=E_out;
     end
     
     

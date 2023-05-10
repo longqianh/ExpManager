@@ -30,10 +30,12 @@ methods(Static)
     function subdir=get_subdir(maindir,sublevel)
         if ispc
             subdir_split=regexp(maindir,'\','split');
+            subdir="";
         else
             subdir_split=regexp(maindir,'/','split');
+            subdir="/";
         end
-        subdir="";
+        
         for i=1:length(subdir_split)-sublevel
             subdir=fullfile(subdir,subdir_split{i});
         end

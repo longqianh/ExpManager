@@ -162,14 +162,27 @@ p=reshape(hdmd(m,:),[64,64]);
 b.Aperture(1e-3);
 b.visProfile("After Aperture");
 
+%% Vortex beam and interference
+b.reset();
+b.interact(b.vortex(16));
+E_total=b.interfere(b.planewave(0.5,0.5));
+% b.visProfile('cmap',colormap('jet'))
+I = abs(E_total).^2;
+
+% Plot the intensity distribution
+figure;
+imagesc(x, y, I);
+axis equal tight off;
+colormap(jet(256));
 %% interference
 b1=Beam(wavelength,beamWidth,'cam_res',cam_res,...
     'profile','gaussian','profile_sigma',0.8);
 b2=Beam(wavelength,beamWidth,'cam_res',cam_res,...
     'profile','gaussian','profile_sigma',0.8);
-b1.interact(b.lens(40e-3));
+b1.interact(b.planewave(0.5,0.5));
+b1.interact(b.lens(100e-3));
 b1.interfere(b2.E);
-b1.visProfile()
+b1.visProfile('cmap',colormap('jet'))
 
 %% See dynamically
 z0=200e-3;

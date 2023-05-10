@@ -166,17 +166,16 @@ classdef OpticUtil
                     pad_sz(2)/2-size(img,2)/2+1:pad_sz(2)/2+size(img,2)/2)=img;
         end
         
-       function amp_image=lee_hologram(phase_in,alpha)
+       function amp_image=lee_hologram(phase_in,ux,uy)
             
             dim_in = size(phase_in);
             amp_image = zeros(dim_in);
             y=1:dim_in(1);
             x=1:dim_in(2);
             [X,Y]=meshgrid(x,y);
-            x_y=X-Y;
-
+            
 %              alpha =0.85;%carrier frequency must be big enough to separate -1st order from 0th order
-             amp_holo = 0.5*(1+cos(2*pi*(x_y)*alpha-phase_in)); % amplitude hologram
+             amp_holo = 0.5*(1+cos(2*pi*(ux*X+uy*Y)-phase_in)); % amplitude hologram
              amp_image(amp_holo>0.5)=1;% binary amplitude hologram
               
         end

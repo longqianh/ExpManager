@@ -46,7 +46,7 @@ classdef OpticUtil
         end
         
 
-        function I=retreivePad(I_pad,src_sz)
+        function I=retrievePad(I_pad,src_sz)
             pad_sz=size(I_pad);
             I=I_pad(floor(pad_sz(1)/2-src_sz(1)/2)+1:floor(pad_sz(1)/2+src_sz(1)/2),...
                 floor(pad_sz(2)/2-src_sz(2)/2)+1:floor(pad_sz(2)/2+src_sz(2)/2));

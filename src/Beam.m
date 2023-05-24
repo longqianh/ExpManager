@@ -9,10 +9,13 @@ properties
     dx % watching camera
     X % camera coordinate x
     Y % camera coordinate y
+    X_pad
+    Y_pad
     pad_factor
     profile_type
     profile_sigma    
-    aperture
+   
+    in_prop = 0
 end
 properties (Access = private)
     canvas
@@ -29,8 +32,10 @@ properties(Dependent)
     x
     y
     k
+    x_pad
     dx_ % higher spatial sample frequency corresponding to padding
     Kz % padded propagation wavevector
+   
 end
 
 
@@ -44,20 +49,20 @@ methods
             options.profile_sigma = 0.8
             options.pad_factor = 5
         end
+        obj.pad_factor = options.pad_factor;
         obj.dx = options.cam_res;
         obj.D = beamWidth;
         obj.lambda = wavelength;
         
         [obj.X,obj.Y]=meshgrid(obj.x,obj.x);
-       
+        [obj.X_pad,obj.Y_pad]=meshgrid(obj.x_pad,obj.x_pad);
 %         obj.Pupil=(obj.X.^2+obj.Y.^2)<=(options.aperture/2)^2;
         obj.profile_sigma=options.profile_sigma;
         obj.profile_type=options.profile;
 %         obj.A = obj.profile(options.profile,options.profile_sigma);
 %         obj.Phi = zeros(obj.N);
         obj.E = obj.profile(options.profile,options.profile_sigma);
-        obj.pad_factor = options.pad_factor;
-        obj.aperture=obj.Aperture(obj.D/2);
+        
         obj.canvas=figure('Color','White','Name',"Propagation Figures","Visible","off");
         obj.canvas_t=tiledlayout(obj.canvas,'flow','TileSpacing','none','Padding','none');
     end
@@ -70,6 +75,7 @@ methods
 %         E=obj.A.*exp(1i*obj.Phi);
 % 
 %     end
+    
     function A=get.A(obj)
         A=abs(obj.E);
     end
@@ -128,6 +134,11 @@ methods
         end
     end
 
+    function x_pad=get.x_pad(obj)
+        x_pad=obj.dx*(-obj.M/2+1:obj.M/2);
+    end
+    
+
     function dx_=get.dx_(obj)
         dx_=obj.D/obj.M;
     end
@@ -142,6 +153,7 @@ methods
 %         obj.aperture=obj.Aperture(obj.D/2);
         obj.canvas=figure('Color','White','Name',"Propagation Figures","Visible","off");
         obj.canvas_t=tiledlayout(obj.canvas,'flow','TileSpacing','none','Padding','none');
+        obj.in_prop=0;
     end
 
     % Characterization
@@ -158,19 +170,28 @@ methods
         end
     end
     
-    function a=Aperture(obj,r)
-        a=sqrt(obj.X.^2+obj.Y.^2)<=r;
-        obj.E=obj.E.*a;
+    function a=aperture(obj,r)
+        
+        if obj.in_prop
+            a=sqrt(obj.X_pad.^2+obj.Y_pad.^2)<=r;
+        else
+            a=sqrt(obj.X.^2+obj.Y.^2)<=r;
+        end
 
     end
 
+    function Aperture(obj,r)
+        obj.E=obj.E.*obj.aperture(r);
+    end
     % Propogation
 
     function E_out=prop(obj,z,E_mod)
         if nargin<3
             U_pad=OpticUtil.centerPad(obj.E,obj.pad_factor);
-        else
+        elseif size(E_mod)==size(obj.E)
             U_pad=OpticUtil.centerPad(obj.E.*E_mod,obj.pad_factor);
+        else
+            U_pad=OpticUtil.centerPad(obj.E,obj.pad_factor).*E_mod;
         end
         % prop in free space
         
@@ -180,7 +201,7 @@ methods
         clear U_pad U_spec U_prop;
 %         E_out = OpticUtil.retrievePad(E_out,obj.sz);
         obj.E=E_out;
-      
+        obj.in_prop=1;
     end
 
     function E_out=prop_seq(obj,t_seq,z_seq)
@@ -210,7 +231,11 @@ methods
                 U_spec=fftshift(fft2(E_in));
                 U_prop=U_spec.*exp(1j*obj.Kz*z);
             else % interact and prop
-                t_pad=OpticUtil.centerPad(t,obj.pad_factor);
+                if size(t)==size(E_in)
+                    t_pad=t;
+                else
+                    t_pad=OpticUtil.centerPad(t,obj.pad_factor);
+                end
                 U_spec=fftshift(fft2(E_in.*t_pad));
                 U_prop=U_spec.*exp(1j*obj.Kz*z);
             end
@@ -220,7 +245,7 @@ methods
 %         E_out = OpticUtil.retrievePad(E_out,obj.sz);
         clear U_spec U_prop;
         obj.E=E_out;
-     
+        obj.in_prop=1;
     end
     % Beam Interaction
     function E_out=interact(obj,t)
@@ -275,7 +300,11 @@ methods
 
     % Common phase profile
     function t=lens(obj,f)
-        t=exp(-1j*obj.k*(obj.X.^2+obj.Y.^2)/(2*f));
+        if obj.in_prop
+            t=exp(-1j*obj.k*(obj.X_pad.^2+obj.Y_pad.^2)/(2*f));
+        else
+            t=exp(-1j*obj.k*(obj.X.^2+obj.Y.^2)/(2*f));
+        end
     end
     
     function t=lens_array(obj,NL,f)
@@ -330,8 +359,13 @@ methods
         % Ty: whether use y direction grating
         
         T = T*dx; % 闪耀光栅周期
-        grating_phase_x = 2*pi*mod(Tx*obj.X,T)/T;
-        grating_phase_y = 2*pi*mod(Ty*obj.Y,T)/T;
+        if obj.in_prop
+            grating_phase_x = 2*pi*mod(Tx*obj.X_pad,T)/T;
+            grating_phase_y = 2*pi*mod(Ty*obj.Y_pad,T)/T;
+        else
+            grating_phase_x = 2*pi*mod(Tx*obj.X,T)/T;
+            grating_phase_y = 2*pi*mod(Ty*obj.Y,T)/T;
+        end
         grating_phase = A*mod(grating_phase_x+grating_phase_y,2*pi);
         t=exp(1j*grating_phase);
 %         t=t.*obj.aperture;
@@ -370,24 +404,31 @@ methods
             options.on_canvas = 0;
             options.cmap = 'gray';
         end
+        if obj.in_prop
+            Amp=obj.A/max(obj.A,[],'all');
+            Phase=mod(obj.Phi,2*pi)/(2*pi);
+        else
+            Amp=OpticUtil.retrievePad(obj.A/max(obj.A,[],'all'),obj.sz);
+            Phase=OpticUtil.retrievePad(mod(obj.Phi,2*pi)/(2*pi),obj.sz);
+        end
         if options.on_canvas
             nexttile(obj.canvas_t,[1,2]);
             obj.canvas.Visible=1;
-            montage({obj.A/max(obj.A,[],'all'),mod(obj.Phi,2*pi)/(2*pi)}, 'Size', [1 2],'DisplayRange', []);
+            montage({Amp,Phase}, 'Size', [1 2],'DisplayRange', []);
             colormap(options.cmap);colorbar;
-            title(strcat(figname,"$$A|\Phi/2\pi$$"),'Interpreter','latex');
+            title(strcat(figname,", $$A|\Phi/2\pi$$"),'Interpreter','latex','Color','blue');
            
         else 
             figure('Color','White','Name',figname);
             subplot(121);
-            imagesc(obj.x, obj.y, obj.A);title('Amplitude');
+            imagesc(obj.x, obj.y, Amp);title('Amplitude');
             axis equal tight;
             colormap(options.cmap);colorbar;
             
             
             axis square
             subplot(122);
-            imagesc(obj.x, obj.y, obj.Phi);title('Phase');
+            imagesc(obj.x, obj.y, Phase);title('Phase');
             axis equal tight;
             colormap(options.cmap);colorbar;
         end

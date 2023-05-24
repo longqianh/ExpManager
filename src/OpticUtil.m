@@ -20,11 +20,11 @@ classdef OpticUtil
                 floor(pad_sz(2)/2-src_sz(2)/2)+1:floor(pad_sz(2)/2+src_sz(2)/2))=I;
         end
 
-        function I_pad=centerPad(I,pad_factor)
+        function I_pad=centerPad(I,pad_sz)
             
-            function [padrange,padsz]=get_padrange(d,pad_n)
+            function [padrange,padsz]=get_padrange(d,padsz)
                 l=floor(d/2);
-                padsz=d*pad_n;
+                % padsz=d*pad_n;
                 if mod(d,2)
                     if ~mod(padsz,2)
                         padsz=padsz+1;
@@ -39,8 +39,8 @@ classdef OpticUtil
             end
 
             src_sz=size(I);
-            [yrange,y_pad]=get_padrange(src_sz(1),pad_factor);
-            [xrange,x_pad]=get_padrange(src_sz(2),pad_factor);
+            [yrange,y_pad]=get_padrange(src_sz(1),pad_sz(1));
+            [xrange,x_pad]=get_padrange(src_sz(2),pad_sz(2));
             I_pad=zeros(y_pad,x_pad);
             I_pad(yrange,xrange)=I;
         end

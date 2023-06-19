@@ -89,8 +89,19 @@ b.reset();
 f_mla=44.3e-3;
 NL=63;
 E_out=b.prop(f_mla,b.lens_array(NL,f_mla));
-b.visProfile("After MLA");
-
+% b.visProfile("After MLA");
+I_out=OpticUtil.retrievePad(abs(E_out).^2,b.sz) ;
+figure('Color','White');
+imshow(I_out,[]);
+%% lens and mla
+b.reset();
+f=150e-3;
+f_mla=44.3e-3;
+NL=63;
+t1_seq={b.lens(f),b.lens_array(NL,f_mla)};
+z1_seq={f+f_mla,f_mla};
+b.prop_seq(t1_seq,z1_seq);
+b.visProfile()
 
 %% SLM Holography [in dev]
 img=squeeze(mean(imread('../data/star.png'),3));

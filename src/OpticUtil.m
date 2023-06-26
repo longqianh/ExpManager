@@ -167,7 +167,9 @@ classdef OpticUtil
         end
         
        function amp_image=lee_hologram(phase_in,ux,uy)
-            
+            if nargin<3
+                uy=ux;
+            end
             dim_in = size(phase_in);
             amp_image = zeros(dim_in);
             y=1:dim_in(1);

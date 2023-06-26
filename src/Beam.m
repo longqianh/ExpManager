@@ -187,11 +187,11 @@ methods
 
     function E_out=prop(obj,z,E_mod)
         if nargin<3
-            U_pad=OpticUtil.centerPad(obj.E,obj.pad_factor);
+            U_pad=OpticUtil.centerPad(obj.E,round(obj.pad_factor*obj.sz));
         elseif size(E_mod)==size(obj.E)
-            U_pad=OpticUtil.centerPad(obj.E.*E_mod,obj.pad_factor);
+            U_pad=OpticUtil.centerPad(obj.E.*E_mod,round(obj.pad_factor*obj.sz));
         else
-            U_pad=OpticUtil.centerPad(obj.E,obj.pad_factor).*E_mod;
+            U_pad=OpticUtil.centerPad(obj.E,round(obj.pad_factor*obj.sz)).*E_mod;
         end
         % prop in free space
         
@@ -218,7 +218,7 @@ methods
         if size(obj.E,1)==obj.N*obj.pad_factor
             E_in=obj.E;
         else
-            E_in=OpticUtil.centerPad(obj.E,obj.pad_factor);
+            E_in=OpticUtil.centerPad(obj.E,obj.pad_factor*obj.sz);
         end
 
         for i=1:length(t_seq)
@@ -234,7 +234,7 @@ methods
                 if size(t)==size(E_in)
                     t_pad=t;
                 else
-                    t_pad=OpticUtil.centerPad(t,obj.pad_factor);
+                    t_pad=OpticUtil.centerPad(t,round(obj.pad_factor*obj.sz));
                 end
                 U_spec=fftshift(fft2(E_in.*t_pad));
                 U_prop=U_spec.*exp(1j*obj.Kz*z);

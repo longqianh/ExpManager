@@ -1,6 +1,7 @@
 clc;clear;close all;
 addpath(genpath('./utils'));
-cam_res=8e-6; % assume a watching camera
+% cam_res=8e-6; % assume a watching camera
+cam_res=1000;
 wavelength=532e-9;
 beamWidth=8e-3;
 b=Beam(wavelength,beamWidth,'cam_res',cam_res,...

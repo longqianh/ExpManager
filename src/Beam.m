@@ -6,7 +6,7 @@ properties
     E % complex electric field
 %     A % amplitude
 %     Phi % phase
-    dx % watching camera
+    N % resolution in the camera
     X % camera coordinate x
     Y % camera coordinate y
     X_pad
@@ -23,7 +23,7 @@ properties (Access = private)
 end
 
 properties(Dependent)
-    N % resolution in the camera
+    dx % watching camera
     sz
     M % padded N for Fourier computation
 %     E
@@ -50,8 +50,10 @@ methods
             options.pad_factor = 5
         end
         obj.pad_factor = options.pad_factor;
-        obj.dx = options.cam_res;
+        
+        obj.N = options.cam_res;
         obj.D = beamWidth;
+
         obj.lambda = wavelength;
         
         [obj.X,obj.Y]=meshgrid(obj.x,obj.x);
@@ -67,10 +69,13 @@ methods
         obj.canvas_t=tiledlayout(obj.canvas,'flow','TileSpacing','none','Padding','none');
     end
 
-    function N=get.N(obj)
-        N=round(obj.D/obj.dx);
-    end
+%     function N=get.N(obj)
+%         N=round(obj.D/obj.dx);
+%     end
 
+    function dx=get.dx(obj)
+        dx = obj.D/obj.N;
+    end
 %     function E=get.E(obj)
 %         E=obj.A.*exp(1i*obj.Phi);
 % 
@@ -247,6 +252,16 @@ methods
         obj.E=E_out;
         obj.in_prop=1;
     end
+
+    % Beam Processing
+    function E_out=crop(obj,crop_sz)
+%         l=round(crop_sz/obj.dx);
+        lx=round(crop_sz(1)/obj.dx);
+        E_sz=size(obj.E);
+        xx=E_sz(1)/2-round(lx/2):E_sz(1)/2+round(lx/2);
+        E_out=obj.E(xx,xx);
+    end
+
     % Beam Interaction
     function E_out=interact(obj,t)
         arguments

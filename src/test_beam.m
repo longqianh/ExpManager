@@ -30,12 +30,12 @@ b.visProfile("After Aperture",'on_canvas',1);
 
 %% lens focusing (4f front lens)
 b.reset(); 
-f=500e-3;
+f=300e-3;
 b.in_prop=1;
 E_out=b.prop(f,b.lens(f));
-b.in_prop=0;
-b.visProfile("L1 Focus Plane",'on_canvas',1);
-
+% b.in_prop=0;
+% b.visProfile("L1 Focus Plane",'on_canvas',1);
+b.visProfile();    
 % analyze the simulation diffraction limit
 I=abs(E_out(round(b.N/2),:)).^2;
 % plot(I);

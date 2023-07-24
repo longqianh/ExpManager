@@ -54,6 +54,8 @@ end
 
 methods
     function obj=ExpManager(exp_name,exp_toolbox,exp_date)
+        % When exp_name == [], ExpManager will not mkdirs
+        
         cur_proj_dir=ExpManager.get_subdir(pwd,1);
         sup_proj_dir=ExpManager.get_subdir(pwd,2);
         obj.toolbox_dir=sup_proj_dir;
@@ -69,8 +71,10 @@ methods
         end
         obj.exp_main_dir=pwd;
         obj.exp_dir=fullfile(sup_proj_dir,'Experiments');
-        obj.exp_save_dir=fullfile(sup_proj_dir,'Experiments',obj.exp_date,obj.exp_name);
-        ExpManager.mkdirs(obj.exp_save_dir);
+        if ~isempty(exp_name)
+            obj.exp_save_dir=fullfile(sup_proj_dir,'Experiments',obj.exp_date,obj.exp_name);
+            ExpManager.mkdirs(obj.exp_save_dir);
+        end
         obj.exp_data_dir=fullfile(cur_proj_dir,'data');
         obj.toolbox_dir=sup_proj_dir;
         ExpManager.import_toolboxes(sup_proj_dir,exp_toolbox);

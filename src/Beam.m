@@ -254,12 +254,14 @@ methods
     end
 
     % Beam Processing
-    function E_out=crop(obj,crop_sz)
-%         l=round(crop_sz/obj.dx);
-        lx=round(crop_sz(1)/obj.dx);
-        E_sz=size(obj.E);
-        xx=E_sz(1)/2-round(lx/2):E_sz(1)/2+round(lx/2);
-        E_out=obj.E(xx,xx);
+    function E_out=crop(obj,crop_mag)
+        if nargin<2
+            crop_mag=1;
+        end
+        if crop_mag>obj.pad_factor
+            crop_mag=obj.pad_factor;
+        end
+        E_out=OpticUtil.retrievePad(obj.E,obj.sz*crop_mag);
     end
 
     % Beam Interaction
@@ -418,8 +420,9 @@ methods
             figname = 'Beam Profile';
             options.on_canvas = 0;
             options.cmap = 'gray';
+            options.in_prop = obj.in_prop;
         end
-        if obj.in_prop
+        if options.in_prop
             Amp=obj.A/max(obj.A,[],'all');
             Phase=mod(obj.Phi,2*pi)/(2*pi);
         else

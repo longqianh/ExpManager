@@ -160,8 +160,11 @@ classdef OpticUtil
             end
         end
 
-        function img_pad=pad_img(img,pad_sz)
-            img_pad=zeros(pad_sz);
+        function img_pad=pad_img(img,pad_sz,pad_val)
+            if nargin<3
+                pad_val=0;
+            end
+            img_pad=pad_val.*ones(pad_sz);
             img_pad(pad_sz(1)/2-size(img,1)/2+1:pad_sz(1)/2+size(img,1)/2,...
                     pad_sz(2)/2-size(img,2)/2+1:pad_sz(2)/2+size(img,2)/2)=img;
         end

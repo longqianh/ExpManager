@@ -1,7 +1,7 @@
 clc;clear;close all;
 addpath(genpath('./utils'));
 % cam_res=8e-6; % assume a watching camera
-cam_res=1000;
+cam_res=1024;
 wavelength=532e-9;
 beamWidth=8e-3;
 b=Beam(wavelength,beamWidth,'cam_res',cam_res,...
@@ -12,7 +12,8 @@ b.visProfile("Initial Profile",'on_canvas',1);
 
 %% free space propogation
 b.reset(); % reset to initial parameters
-z=200e-3;
+z=10e-3;
+b.interact(exp(1j*phase));
 b.prop(z);
 b.in_prop=0; % if in_prop=1, vis will give the padded result 
 b.visProfile();

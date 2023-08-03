@@ -60,7 +60,7 @@ methods
         sup_proj_dir=ExpManager.get_subdir(pwd,2);
         obj.toolbox_dir=sup_proj_dir;
         addpath(genpath(cur_proj_dir));
-        obj.import_toolbox("Exp-toolbox");
+        obj.import_toolbox("ExpManager");
 
         obj.exp_name=exp_name;
         if nargin<3

@@ -156,9 +156,12 @@ methods
         obj.E = obj.profile(obj.profile_type,obj.profile_sigma);
 %         obj.Phi = zeros(obj.N);
 %         obj.aperture=obj.Aperture(obj.D/2);
-        obj.canvas=figure('Color','White','Name',"Propagation Figures","Visible","off");
-        obj.canvas_t=tiledlayout(obj.canvas,'flow','TileSpacing','none','Padding','none');
         obj.in_prop=0;
+    end
+
+    function reset_canvas(obj)
+        obj.canvas=figure('Color','White','Name',"Propagation Figures","Visible","off");
+        obj.canvas_t=tiledlayout(obj.canvas,'flow','TileSpacing','none','Padding','none'); 
     end
 
     % Characterization

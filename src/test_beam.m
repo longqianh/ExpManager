@@ -5,17 +5,16 @@ cam_res=1024;
 wavelength=532e-9;
 beamWidth=8e-3;
 b=Beam(wavelength,beamWidth,'cam_res',cam_res,...
-    'profile','gaussian','profile_sigma',0.5);
-
-b.visProfile("Initial Profile",'on_canvas',1);
+    'profile','gaussian','profile_sigma',0.5,'pad_factor',5);
+b.visProfile("Initial Profile",'on_canvas',0);
 % dcmos=2*f*wavelength/dxl;
 
 %% free space propogation
 b.reset(); % reset to initial parameters
+% b.reset_canvas(); % [bug here]
 z=10e-3;
-b.interact(exp(1j*phase));
 b.prop(z);
-b.in_prop=0; % if in_prop=1, vis will give the padded result 
+b.in_prop=1; % if in_prop=1, vis will give the padded result 
 b.visProfile();
 
 %% add aperture
@@ -49,17 +48,21 @@ fprintf("Simulated resolution limit (%.2f max I) %.3f um\n",p,d_simu*1e3);
 
 %% 4f system
 b.reset();
+b.reset_canvas();
+b.in_prop=0;
 b.visProfile('Before 4f','on_canvas',1);
-f1=400e-3;
-f2=200e-3; % 0.5x
+f1=100e-3;
+f2=50e-3; % 0.5x
 b.in_prop=1;
 t_seq={b.lens(f1),-1,b.lens(f2)}; % -1 for free space
 z_seq={f1,f2,0};
 % prop_seq: Ein->t1->z1->tn->zn->Eout
 b.prop_seq(t_seq,z_seq);
+b.in_prop=0;
 b.visProfile('After 4f','on_canvas',1);
 %% spatial filtering with grating [still have bug]
 b.reset();
+b.reset_canvas();
 b.in_prop=1;
 f1=300e-3;
 f2=150e-3;
